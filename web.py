@@ -111,6 +111,23 @@ def delete(pid):
     return redirect(url_for("dashboard"))
 
 
+@app.route("/api/auto-check")
+def auto_check():
+    """Bahir wala cron (cron-job.org) har kuch minute baad is URL ko
+    hit karega taake prices khud check hon. ?key= zaroori hai taake
+    koi ajnabi trigger na kar sake (Render par CRON_KEY env var lagao)."""
+    key = request.args.get("key", "")
+    cron_key = os.environ.get("CRON_KEY") or app.secret_key
+    if not cron_key or key != cron_key:
+        return {"ok": False, "error": "ghalat ya missing key"}, 403
+    database.init_db()
+    results = []
+    for p in database.get_products():
+        ok, msg = do_check(p["id"])
+        results.append({"name": p["name"], "ok": ok, "message": msg})
+    return {"ok": True, "checked": len(results), "results": results}
+
+
 if __name__ == "__main__":
     database.init_db()
     app.run(debug=True, port=5000)
