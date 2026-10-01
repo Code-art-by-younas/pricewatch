@@ -1,4 +1,4 @@
-"""PriceWatch - scraper: web page se price nikalna (requests + BeautifulSoup)."""
+"""PriceWatch - scraper: web page ya JSON API se price nikalna."""
 import json
 import re
 import requests
@@ -44,10 +44,41 @@ def find_jsonld_price(data):
     return None
 
 
+def walk_json_path(data, path):
+    """'bitcoin.usd' -> data['bitcoin']['usd'] (JSON mein dot-path)."""
+    cur = data
+    for part in path.split("."):
+        if isinstance(cur, dict) and part in cur:
+            cur = cur[part]
+        elif isinstance(cur, list) and part.isdigit() \
+                and int(part) < len(cur):
+            cur = cur[int(part)]
+        else:
+            raise ValueError(
+                f"JSON path '{path}' mein '{part}' nahi mila")
+    return cur
+
+
 def fetch_price(url, selector=None):
-    """URL kholo, price nikalo. Tarteeb: selector -> JSON-LD -> price class."""
+    """URL kholo, price nikalo.
+
+    JSON API ho (CoinGecko jaisi) to selector ko dot-path samjho,
+    warna tarteeb: selector -> JSON-LD -> price class.
+    """
     resp = requests.get(url, headers=HEADERS, timeout=15)
     resp.raise_for_status()
+
+    # 0. JSON API response (CoinGecko waghera): selector = JSON dot-path
+    ctype = resp.headers.get("Content-Type", "")
+    if "json" in ctype:
+        data = resp.json()
+        if not selector:
+            raise ValueError(
+                "API URL ke liye selector mein JSON path do "
+                "(jaise 'bitcoin.usd')")
+        value = walk_json_path(data, selector)
+        return float(str(value).replace(",", ""))
+
     soup = BeautifulSoup(resp.text, "html.parser")
 
     # 1. Selector diya ho to wahi
