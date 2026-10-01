@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block content %}
+<a class="back" href="{{ url_for('dashboard') }}">← Dashboard</a>
+<div class="panel">
+  <h2 class="page-title" style="margin-top:0">{{ product.name }}</h2>
+  {% if card.alert %}<span class="badge">🔥 TARGET HIT!</span>{% endif %}
+  <p class="price">{{ "Rs.{:,.2f}".format(card.last) if card.last is not none else "Abhi check nahi hui" }}</p>
+  <p class="meta">🎯 Target: {{ "Rs.{:,.0f}".format(product.target_price) if product.target_price else "—" }}</p>
+  <p class="meta">🔗 <a href="{{ product.url }}" target="_blank" rel="noopener">Original listing kholo</a></p>
+  <a class="btn small btn-wait" href="{{ url_for('check_one', pid=product.id) }}">⟳ Check Now</a>
+</div>
+
+<div class="panel">
+<h3 style="margin-top:0">📊 Price History</h3>
+{% if history %}
+<canvas id="chart" class="chart" height="110"></canvas>
+<table>
+  <thead><tr><th>Date &amp; Time</th><th>Price</th><th>Change</th></tr></thead>
+  <tbody>
+  {% for r in history %}
+  <tr>
+    <td>{{ r.checked_at }}</td>
+    <td><b>Rs.{{ "{:,.2f}".format(r.price) }}</b></td>
+    <td>
+      {% if not loop.first %}
+        {% set diff = r.price - history[loop.index0 - 1].price %}
+        {% if diff < 0 %}<span class="trend-down">▼ {{ "{:,.0f}".format(diff) }}</span>
+        {% elif diff > 0 %}<span class="trend-up">▲ +{{ "{:,.0f}".format(diff) }}</span>
+        {% else %}—{% endif %}
+      {% else %}—{% endif %}
+    </td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+new Chart(document.getElementById('chart'), {
+  type: 'line',
+  data: {
+    labels: {{ history|map(attribute='checked_at')|list|tojson }},
+    datasets: [{
+      label: 'Price (Rs.)',
+      data: {{ history|map(attribute='price')|list|tojson }},
+      borderColor: '#4f46e5', backgroundColor: 'rgba(79,70,229,.12)',
+      fill: true, borderWidth: 3, tension: .3, pointRadius: 5,
+      pointBackgroundColor: '#4f46e5'
+    }
+    {% if product.target_price %}
+    ,{
+      label: 'Target',
+      data: Array({{ history|length }}).fill({{ product.target_price }}),
+      borderColor: '#ef4444', borderDash: [8, 5], borderWidth: 2,
+      pointRadius: 0, fill: false
+    }
+    {% endif %}
+  ]},
+  options: { plugins: { legend: { display: true } },
+             animation: { duration: 900, easing: 'easeOutQuart' } }
+});
+</script>
+{% else %}
+<p class="empty"><span class="big">📭</span>Abhi koi history nahi — <b>Check Now</b> dabao.</p>
+{% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PriceWatch — Live Price Monitor</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<header>
+  <h1 class="logo">🔍 Price<span>Watch</span></h1>
+  <nav>
+    <a class="navlink" href="{{ url_for('dashboard') }}">Dashboard</a>
+    <a class="navlink" href="{{ url_for('add') }}">+ Add Product</a>
+    <a class="btn ghost btn-wait" href="{{ url_for('check_all') }}">⟳ Check All Prices</a>
+  </nav>
+</header>
+<main>
+  {% with msgs = get_flashed_messages() %}
+    {% if msgs %}
+    <div class="flash">{% for m in msgs %}<p>{{ m }}</p>{% endfor %}</div>
+    {% endif %}
+  {% endwith %}
+  {% block content %}{% endblock %}
+</main>
+<footer>PriceWatch · live price monitoring · built with Python + Flask</footer>
+<script>
+// Check buttons par click karte hi loading spinner dikhao
+document.addEventListener("click", function (e) {
+  var b = e.target.closest(".btn-wait");
+  if (b && !b.classList.contains("loading")) {
+    b.classList.add("loading");
+    b.innerHTML = '<span class="spin"></span> Checking...';
+  }
+});
+</script>
+</body>
+</html>

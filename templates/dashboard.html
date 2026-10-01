@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="stats">
+  <div class="stat"><div class="num">{{ stats.products }}</div><div class="lbl">Products tracked</div></div>
+  <div class="stat{% if stats.alerts %} hot{% endif %}"><div class="num">{{ stats.alerts }}</div><div class="lbl">🔥 Target hits</div></div>
+  <div class="stat"><div class="num">{{ stats.checks }}</div><div class="lbl">Price checks done</div></div>
+</div>
+
+{% if not cards %}
+<div class="empty">
+  <span class="big">🛒</span>
+  <h3 style="color:var(--ink);margin:0 0 8px">Abhi koi product track nahi ho raha</h3>
+  <p>Pehla product add karo aur live price dekho.</p>
+  <a class="btn" href="{{ url_for('add') }}">+ Add Your First Product</a>
+</div>
+{% else %}
+<div class="grid">
+{% for c in cards %}
+  <div class="card{% if c.alert %} alert-card{% endif %}">
+    <h3>{{ c.product.name }}</h3>
+    {% if c.alert %}<span class="badge">🔥 TARGET HIT!</span>{% endif %}
+    <p class="price">{{ "Rs.{:,.2f}".format(c.last) if c.last is not none else "—" }}</p>
+    <p class="meta">🎯 Target: {{ "Rs.{:,.0f}".format(c.product.target_price) if c.product.target_price else "—" }}</p>
+    <p class="meta">
+      {% if c.trend < 0 %}<span class="trend-down">📉 gir rahi hai</span>
+      {% elif c.trend > 0 %}<span class="trend-up">📈 barh rahi hai</span>
+      {% else %}➖ stable{% endif %}
+      · {{ c.checks }} checks
+    </p>
+    <div class="actions">
+      <a class="btn small" href="{{ url_for('detail', pid=c.product.id) }}">Details</a>
+      <a class="btn small btn-wait" href="{{ url_for('check_one', pid=c.product.id) }}">⟳ Check Now</a>
+      <form method="post" action="{{ url_for('delete', pid=c.product.id) }}"
+            onsubmit="return confirm('{{ c.product.name }} delete kar doon?')">
+        <button type="submit" class="btn small danger">Delete</button>
+      </form>
+    </div>
+  </div>
+{% endfor %}
+</div>
+{% endif %}
+{% endblock %}

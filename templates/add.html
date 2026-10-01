@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="page-title">➕ Naya Product Add Karo</h2>
+<form method="post" class="form">
+  <label>Product ka naam
+    <input name="name" required placeholder="masalan: iPhone 12 (OLX)">
+  </label>
+  <label>Product page ka URL
+    <input name="url" required placeholder="https://...">
+  </label>
+  <label>Price ka CSS selector <span style="color:var(--muted);font-weight:400">(optional)</span>
+    <input name="selector" placeholder="khali chhoro — khud detect ho jayega ✨">
+  </label>
+  <label>Target price — is se kam ho to 🔥 alert <span style="color:var(--muted);font-weight:400">(optional)</span>
+    <input name="target_price" placeholder="masalan: 50000">
+  </label>
+  <button type="submit" class="btn">Add Product</button>
+</form>
+<p class="hint">💡 Tip: selector khaali chhor do — website JSON-LD structured data se price khud dhoond leti hai (OLX jaisi real sites par tested ✅).</p>
+{% endblock %}
